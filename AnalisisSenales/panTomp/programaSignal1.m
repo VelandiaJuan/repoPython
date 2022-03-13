@@ -15,7 +15,7 @@ panTomp = integralVentana(elevador1,ventana);
 % identificacion de los picos de la senal
 tamano = size(panTomp);%identificar el tamano del vector
 % crear un vector con el tamano del vector de la integral de ventana
-x = linspace(0,tamano(2),tamano(2));
+x = linspace(0,tamano(2),tamano(2));%vector auxiliar
 
 % identificacion de picos y su posicion
 minPicIden = max(panTomp)/3;%Identifique si su valor supera la 3 parte del pico max
@@ -26,15 +26,17 @@ minPicIden = max(panTomp)/3;%Identifique si su valor supera la 3 parte del pico 
 % numero de muestras
 meanCycle = mean(diff(locs));
 fMuestreo = 0.0035;%s
+% meanCycle*fMuestreo esto seria pulsacion de segundo
 frecuenciaPromedio = 60/(meanCycle*fMuestreo);
+
 
 % diagnostico
 if (frecuenciaPromedio <= 100)&(frecuenciaPromedio >= 60)
-    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' es normal'];
+    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' P/min es normal'];
 elseif (frecuenciaPromedio < 60)
-    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),'  es baja'];
-elseif (frecuenciaPromedio > 60)
-    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),'  es alta'];
+    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' P/min es baja'];
+elseif (frecuenciaPromedio > 100)
+    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' P/min es alta'];
 else
     mensaje = 'Frecuencia de No IDentificada';
 end

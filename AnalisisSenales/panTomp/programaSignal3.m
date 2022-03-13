@@ -31,11 +31,11 @@ frecuenciaPromedio = 60/(meanCycle*fMuestreo);
 
 % diagnostico
 if (frecuenciaPromedio <= 100)&(frecuenciaPromedio >= 60)
-    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' es normal'];
+    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' P/min es normal'];
 elseif (frecuenciaPromedio < 60)
-    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),'  es baja'];
-elseif (frecuenciaPromedio > 60)
-    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),'  es alta'];
+    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' P/min es baja'];
+elseif (frecuenciaPromedio > 100)
+    mensaje = ['Frecuencia de :',num2str(frecuenciaPromedio),' P/min es alta'];
 else
     mensaje = 'Frecuencia de No IDentificada';
 end
