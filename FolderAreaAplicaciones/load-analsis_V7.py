@@ -5,6 +5,10 @@ Created on Fri Feb 25 11:22:24 2022
 @author: jose.contreras
 """
 
+# =============================================================================
+#                   PROGRAMA PARA DETECCIÓN DEL MEJOR STROKE
+# =============================================================================
+
 import numpy             as np
 import pandas            as pd
 import matplotlib.pyplot as plt
@@ -18,8 +22,62 @@ def smooth(y,pts):# Signal Smoothing
     
     return ysmooth
 
+# =============================================================================
+#                DETECCION DEL STROKE A PARTIR DE LA POSICION
+# =============================================================================
+def Stroke_Pos (Pos, Pot, Load, nlineas): 
+    
+    mitadnlineas = (nlineas//2)
+    Min_Pos = min(Pos[0:mitadnlineas])
+    Max_Pos = max(Pos[0:mitadnlineas])
+    ref = (Max_Pos - Min_Pos)*0.5
+    
+    for i in range (0, mitadnlineas):
+        if Pos[i]==Min_Pos:
+            Min_ind = i
+    
+    Aux1=0
+    
+    for i in range (Min_ind+1,nlineas-1):
+        if Aux1==0:
+            if Pos[i]-Pos[i+1] < 0: 
+                if Pos[i]-ref > 0:
+                    Aux1 = 1
+                    Paso_1 = i
+    
+    Aux2 = 0
+    
+    for i in range (Paso_1+1, nlineas-1):
+        if Aux1 == 1 and Aux2 == 0:
+            if Pos[i]-Pos[i+1] > 0:  
+                if Pos[i]-ref < 0:
+                    Aux2 = 1
+                    Paso_2 = i
+    
+    Rango = Paso_2 + (Paso_2 - Min_ind)
+    Seg_min = min(Pos[Paso_2:Rango])
+    
+    for i in range (Paso_2, Rango):
+        if Pos[i] == Seg_min:
+            Seg_ind = i
+            
+    Idx = int(Min_ind)
+    Idxn = int(Seg_ind)
+    Delta_S     = Idxn - Idx                # numero de datos entre maximos (Stroke)
+    PosX        = Pos_F[Idx:Idxn]
+    PosX[Delta_S-1] = PosX[0]
+    PotX        = Pot_F[Idx:Idxn]
+    LoadX       = Load_F [Idx:Idxn]
+    LoadX[Delta_S-1] = LoadX[0]
+
+    
+    return PosX,PotX,LoadX, Idx, Idxn, Min_ind, Paso_1
+
+# =============================================================================
+#                DETECCION DEL STROKE A PARTIR DE LA POTENCIA
+# =============================================================================
+
 def Stroke_Pot1(Pos,Pot, Load, nlineas):           # Detection of stroke using VSD Power
-    global PosX,PotX,LoadX, Idx, Idxn, vectorLV
     
     MPow     = Pot[0:nlineas // 2] # Inicia con la mitad de los datos
     max_pow  = np.max(MPow)          # Detección del maximo de la señal de Potencia
@@ -36,7 +94,6 @@ def Stroke_Pot1(Pos,Pot, Load, nlineas):           # Detection of stroke using V
     Aux5=0
     Aux6=0
     Aux7=0
-    Idxn=0
     for i in range (0, nlineas-1):
         if vectorLV[i+1]-vectorLV[i] > 10:
             if Aux5==0:
@@ -60,7 +117,11 @@ def Stroke_Pot1(Pos,Pot, Load, nlineas):           # Detection of stroke using V
     LoadX[Delta_S-1] = LoadX[0]
 
     
-    return Idx,Idxn, Delta_S
+    return PosX, PotX, LoadX, Idx, Idxn, vectorLV
+
+# =============================================================================
+#              FILTRO DE SAVITZKI IMPLEMENTADO PARA 5 VENTANAS 
+# =============================================================================
 
 def Savgol (X, caso):
     global y, ln
@@ -114,15 +175,17 @@ def Savgol (X, caso):
     ln = len(y)
     return
    
-
 #==============================================================================
+# =============================================================================
+#                     LLAMADO DE  DATA DESDE XLS
+# =============================================================================
 #path = "0Cargas_7SPM_22Feb.xls" # Datos del pozo average del TWM
-#path = "3Cargas_7SPM_22Feb.xls"
+path = "3Cargas_7SPM_22Feb.xls"
 #path = "2Cargas_7SPM_22Feb.xls"
 #path = "1Carga_BP.xls"
 #path = "3Cargas_7SPM_24Feb.xls"
 #path = "DobleVel_3Cargas_7SPM_24Feb.xls"
-path = 'Reverse_3Cargas_7SPM_25Feb.xls'
+#path = 'Reverse_3Cargas_7SPM_25Feb.xls'
 xl   = pd.ExcelFile(path)
 df   = xl.parse(sheet_name=1,header=0)  # sheet name
 Oil_array = df.to_numpy()
@@ -143,7 +206,10 @@ for i in range(nlineas):            # Estructura de datos en la hoja excel
         Load[i]      = Oil_array[i,1] # correspondientes
         Pot[i]       = Oil_array[i,2]
         #Current[i]   = Oil_array[i,3]
-#==============================================================================
+        
+# =============================================================================
+#                       FILTRADO CON FUNCION Y RUTINA
+# =============================================================================
 
 Tipo = 1 # selección por posición
 Load_F      = scipy.signal.savgol_filter(Load,25,3)
@@ -160,13 +226,35 @@ plt.figure
 plt.plot(y)
 plt.show()
 
-Stroke_Pot1(Pos, y, Load, ln)
+# =============================================================================
+#                       LLAMADO DE RUTINA DE POTENCIA
+# =============================================================================
+
+[PosX, PotX, LoadX, Idx, Idxn, vectorLV] = Stroke_Pot1(Pos, y, Load, ln)
 nlineas = ln
 
 plt.figure
 plt.plot(PotX, 'r')
 plt.twinx()
 plt.plot(PosX)
+plt.title('Stroke obtenido a partir de la potencia')
+plt.show()
+
+plt.figure
+plt.plot(PosX, LoadX)
+plt.show()
+
+# =============================================================================
+#                       LLAMADO DE RUTINA DE POSICIÓN
+# =============================================================================
+
+[PosX,PotX,LoadX, Idx, Idxn, Min_ind, Paso_1] = Stroke_Pos (Pos, Pot, Load, nlineas)
+
+plt.figure
+plt.plot(PotX, 'r')
+plt.twinx()
+plt.plot(PosX)
+plt.title('Stroke obtenido a partir de la posición')
 plt.show()
 
 plt.figure
