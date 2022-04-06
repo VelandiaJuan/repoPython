@@ -48,8 +48,8 @@ def vec_desc (Pos_F, Load_F):
     # Calculo del centroide del dinagrama de superficie y de fondo
     # =============================================================================
     
-    Xo = round(np.sum(Pos_F*I_trap)/I_trap,3)
-    Yo = round(np.sum(Load_F*I_trap)/I_trap,3)
+    Xo = round(np.sum(Pos_F*I_trap)/I_trap,3)#no se utiliza
+    Yo = round(np.sum(Load_F*I_trap)/I_trap,3)#no se utiliza
     Xc = round(np.sum(Pos_F)/nlineas,3)
     Yc = round(np.sum(Load_F)/nlineas,3)
     
